@@ -8,7 +8,6 @@ module.exports = function signUrl(url) {
   const cdnToken = process.env?.BUNNY_CDN_TOKEN_AUTH;
   if (!cdnToken) return null;
 
-  // expires 24 hour
   const expires = Math.floor((Date.now() + expirationTime) / 1000);
   const parsedURL = new URL(url);
   
