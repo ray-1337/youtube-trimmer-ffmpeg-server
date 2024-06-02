@@ -143,6 +143,13 @@ app.post("/trim", async (req, res) => {
 
     // resetting the duration
     const maxVideoDurationSecond = Math.round(+firstRawVideoURL.approxDurationMs / 1000);
+
+    // limitation
+    const maxDurationNumberInMins = 30;
+    if (process.env.npm_lifecycle_event === "start" && maxVideoDurationSecond >= Math.round(ms(`${maxDurationNumberInMins}m`) / 1000)) {
+      return res.status(413).send(`max video duration is ${maxDurationNumberInMins} minutes.`);
+    };
+
     if (maxSecond >= maxVideoDurationSecond) {
       maxSecond = maxVideoDurationSecond;
     };
