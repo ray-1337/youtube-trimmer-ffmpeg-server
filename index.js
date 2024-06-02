@@ -3,10 +3,47 @@ require("dotenv/config");
 const Express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
-const { validateURL, getInfo } = require("ytdl-core");
-const { Readable, PassThrough } = require("node:stream");
+const { validateURL, getInfo, getVideoID } = require("ytdl-core");
+const { Readable, PassThrough, pipeline } = require("node:stream");
 const { v4: uuidv4 } = require("uuid");
 const { request } = require("undici");
+const ms = require("ms");
+const { writeFile, stat, rm, mkdir } = require("node:fs/promises");
+const { existsSync, mkdirSync, readdirSync, createWriteStream } = require("node:fs");
+const { promisify } = require('util');
+const pipelineAsync = promisify(pipeline);
+
+// temp path
+const intervalCache = {};
+const path = require("node:path");
+const tempPath = path.join(__dirname, ".tmpvid");
+
+const registerFolderForDeletion = (fileID) => {
+  const tempDuration = ms("1h");
+
+  if (intervalCache?.[fileID]) {
+    clearTimeout(intervalCache[fileID]);
+    delete intervalCache[fileID];
+  };
+
+  intervalCache[fileID] = setTimeout(async () => {
+    try {
+      await rm(path.join(tempPath, fileID), { force: true, recursive: true });
+    } catch {};
+  }, tempDuration);
+
+  return;
+};
+
+if (existsSync(tempPath)) {
+  const files = readdirSync(tempPath);
+  
+  if (files.length) {
+    for (const file of files) registerFolderForDeletion(file);
+  };
+} else {
+  mkdirSync(tempPath, { recursive: true });
+};
 
 const signURL = require("./util/signURL");
 
@@ -118,10 +155,36 @@ app.post("/trim", async (req, res) => {
     const buffers = [];
     const bufferStream = new PassThrough();
 
+    // check the video from server's temp, or download the video first
+    const youtubeVideoID = getVideoID(body.url);
+    const videoDirPath = path.join(tempPath, youtubeVideoID);
+    const videoFilePath = path.join(videoDirPath, `${youtubeVideoID}.mp4`);
+    if (!existsSync(videoFilePath)) {
+      await mkdir(videoDirPath, { recursive: true });
+
+      const { body, statusCode } = await request(firstRawVideoURL.url, {
+        method: "GET"
+      });
+
+      if (statusCode !== 200) {
+        return res.status(500).send("unable to download the specified video.");
+      };
+
+      const writer = createWriteStream(videoFilePath);
+
+      await pipelineAsync(body, writer, { end: true });
+
+      registerFolderForDeletion(youtubeVideoID);
+    };
+
+    if (!existsSync(videoFilePath)) {
+      return res.status(500).send("unable to open the video from the backend.");
+    };
+
     await new Promise(async (resolve, reject) => {
-      const ffmpegConcept = ffmpeg(firstRawVideoURL.url)
+      const ffmpegConcept = ffmpeg(videoFilePath)
       .addOptions([
-        '-i', firstRawVideoURL.url,
+        '-i', videoFilePath,
         '-ss', minSecond,
         '-to', maxSecond,
         "-c:a", "aac",
