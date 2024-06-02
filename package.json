@@ -2,6 +2,10 @@
   "name": "youtube-trimmer-ffmpeg-server",
   "version": "1.0.0",
   "license": "MIT",
+  "main": "index.js",
+  "scripts": {
+    "dev": "pnpm nodemon ./"
+  },
   "dependencies": {
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "@ffprobe-installer/ffprobe": "^2.1.2",
@@ -14,5 +18,8 @@
     "undici": "^6.18.2",
     "uuid": "^9.0.1",
     "ytdl-core": "^4.11.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.2"
   }
 }
