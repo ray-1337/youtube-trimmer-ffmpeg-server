@@ -10,6 +10,7 @@
     "express": "^4.19.2",
     "fluent-ffmpeg": "^2.1.3",
     "helmet": "^7.1.0",
+    "undici": "^6.18.2",
     "ytdl-core": "^4.11.5"
   }
 }
