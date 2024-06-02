@@ -4,7 +4,8 @@
   "license": "MIT",
   "main": "index.js",
   "scripts": {
-    "dev": "pnpm nodemon ./"
+    "dev": "pnpm nodemon ./",
+    "start": "node ."
   },
   "dependencies": {
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
