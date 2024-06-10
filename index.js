@@ -104,14 +104,13 @@ app.post("/trim", async (req, res) => {
 
     // retrieving youtube content info
     const cookie = process.env.COOKIE_BYPASS;
-    const data = await getInfo(body.url, {
+    const data = await getInfo(body.url, (typeof cookie === "string" && cookie.length >= 1) ? {
       requestOptions: {
-        headers: {
-          // used to bypass age-restricted video, etc
-          cookie: (typeof cookie === "string" && cookie.length >= 1) ? cookie : ""
+        header: {
+          cookie
         }
       }
-    });
+    } : undefined);
 
     if (!data) {
       return res.status(500).send("unable to fetch the data of the current youtube url.");
