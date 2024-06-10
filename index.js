@@ -108,7 +108,7 @@ app.post("/trim", async (req, res) => {
       requestOptions: {
         headers: {
           // used to bypass age-restricted video, etc
-          cookie: (typeof cookie === "string" && cookie.length >= 1) ? cookie : undefined
+          cookie: (typeof cookie === "string" && cookie.length >= 1) ? cookie : ""
         }
       }
     });
